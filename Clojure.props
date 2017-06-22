@@ -3,7 +3,7 @@
 plugin.clojure.ClojurePlugin.activate=startup
 plugin.clojure.ClojurePlugin.author=Damien Radtke
 plugin.clojure.ClojurePlugin.description=Provides Clojure to jEdit
-plugin.clojure.ClojurePlugin.docs=index.html
+plugin.clojure.ClojurePlugin.docs=docs/index.html
 plugin.clojure.ClojurePlugin.longdescription=description.html
 plugin.clojure.ClojurePlugin.name=Clojure
 plugin.clojure.ClojurePlugin.usePluginHome=false
