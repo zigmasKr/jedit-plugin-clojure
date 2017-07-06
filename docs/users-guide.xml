@@ -5,6 +5,9 @@
 		<author>
 			<firstname>Damien</firstname><surname>Radtke</surname>
 		</author>
+		<author>
+			<firstname>Zigmantas</firstname><surname>Kryžius</surname>
+		</author>
 	</bookinfo>
 	<chapter id="overview"><title>Overview</title>
 		<para>
@@ -12,9 +15,9 @@
 			targeted for the JVM.
 		</para>
 		<para>
-			The jars provided by this plugin are clojure-core 1.2.0 and clojure-contrib
-			1.1.0. Different jars can be used by configuring the plugin in the Plugin Options
-			window.
+			The jars provided by this plugin are clojure-1.8.0, and clojure-contrib-1.2.0
+			and clojure-jsr223-1.2.jar. Different jars can be used by configuring the plugin
+			in the Plugin Options window.
 		</para>
 	</chapter>
 	<chapter id="console"><title>Using with Console</title>
@@ -30,6 +33,10 @@
 			Alternatively, this plugin installs a clojure commando file, so scripts can
 			be run by setting it as the interpreter for clojure files (Plugin Options -> Console
 			-> Compile &amp; Run), and then Plugins -> Console -> Run Current Buffer.
+		</para>
+		<para>
+			With the Clojure SE Shell plugin installed, the Clojure script handler is available
+			so you can write jEdit macros in Clojure and test them in Clojure script engine shell.
 		</para>
 	</chapter>
 </book>
