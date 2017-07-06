@@ -15,7 +15,7 @@
 			targeted for the JVM.
 		</para>
 		<para>
-			The jars provided by this plugin are clojure-1.8.0, and clojure-contrib-1.2.0
+			The jars provided by this plugin are clojure-1.8.0, clojure-contrib-1.2.0
 			and clojure-jsr223-1.2.jar. Different jars can be used by configuring the plugin
 			in the Plugin Options window.
 		</para>

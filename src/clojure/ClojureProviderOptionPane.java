@@ -10,6 +10,9 @@ package clojure;
 import clojure.ClojurePlugin;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.Dimension;
+import java.awt.FontMetrics;
+import java.awt.Font;
 import java.io.File;
 import java.io.FilenameFilter;
 import javax.swing.Box;
@@ -66,12 +69,12 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 		corePanel.setLayout(new BoxLayout(corePanel, BoxLayout.X_AXIS));
 		corePanel.add(coreIncluded = new JRadioButton(jEdit.getProperty(
 			"options.clojure.included-core-label")));
+		corePanel.add(Box.createRigidArea(new Dimension(5, 0)));
 		corePanel.add(coreCustom = new JRadioButton(jEdit.getProperty(
 			"options.clojure.choose-label")));
 		ButtonGroup coreGroup = new ButtonGroup();
 		coreGroup.add(coreIncluded);
 		coreGroup.add(coreCustom);
-		corePanel.add(new JSeparator(JSeparator.VERTICAL));
 		corePanel.add(corePath = new JTextField());
 		coreBrowse = new JButton(jEdit.getProperty("vfs.browser.browse.label"));
 		coreBrowse.addActionListener(new BrowseHandler(corePath));
@@ -93,11 +96,11 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 		JPanel contribPanel = new JPanel();
 		contribPanel.setLayout(new BoxLayout(contribPanel, BoxLayout.X_AXIS));
 		contribPanel.add(contribIncluded = new JRadioButton("Included (1.2.0)"));
+		contribPanel.add(Box.createRigidArea(new Dimension(5, 0)));
 		contribPanel.add(contribCustom = new JRadioButton("Choose jar"));
 		ButtonGroup contribGroup = new ButtonGroup();
 		contribGroup.add(contribIncluded);
 		contribGroup.add(contribCustom);
-		contribPanel.add(new JSeparator(JSeparator.VERTICAL));
 		contribPanel.add(contribPath = new JTextField());
 		contribBrowse = new JButton(jEdit.getProperty("vfs.browser.browse.label"));
 		contribBrowse.addActionListener(new BrowseHandler(contribPath));
@@ -115,15 +118,27 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 		contribCustom.addActionListener(handler);
 		addComponent("Contrib:", contribPanel);
 		
-		// Scripting (JSR223)
+		// JSR223 (scripting)
+		String strA = "1.2.0";
+		String strB = "1.2";
+		JLabel lblA = new JLabel(strA);
+		JLabel lblB = new JLabel(strB);
+		Font fA = lblA.getFont();
+		// font of lblB is assumed to be the same
+		// https://stackoverflow.com/questions/2843601/java-fontmetrics-without-graphics
+		FontMetrics fmA = lblA.getFontMetrics(fA);
+		FontMetrics fmB = lblB.getFontMetrics(fA);
+		int diff = fmA.stringWidth(strA) - fmB.stringWidth(strB);
+		//
 		JPanel scriptingPanel = new JPanel();
 		scriptingPanel.setLayout(new BoxLayout(scriptingPanel, BoxLayout.X_AXIS));
 		scriptingPanel.add(scriptingIncluded = new JRadioButton("Included (1.2)"));
+		scriptingPanel.add(Box.createRigidArea(new Dimension(diff, 0)));
+		scriptingPanel.add(Box.createRigidArea(new Dimension(5, 0)));
 		scriptingPanel.add(scriptingCustom = new JRadioButton("Choose jar"));
 		ButtonGroup scriptingGroup = new ButtonGroup();
 		scriptingGroup.add(scriptingIncluded);
 		scriptingGroup.add(scriptingCustom);
-		scriptingPanel.add(new JSeparator(JSeparator.VERTICAL));
 		scriptingPanel.add(scriptingPath = new JTextField());
 		scriptingBrowse = new JButton(jEdit.getProperty("vfs.browser.browse.label"));
 		scriptingBrowse.addActionListener(new BrowseHandler(scriptingPath));
@@ -211,4 +226,5 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 		}
 
 	}
+	
 }
