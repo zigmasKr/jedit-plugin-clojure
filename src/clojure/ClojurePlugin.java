@@ -1,9 +1,11 @@
 package clojure;
-/**
+ /**
  * @author Damien Radtke
  * class ClojurePlugin
  * The main class for the clojure plugin.
  * Handles all loading/unloading of clojure jars
+ * @author Zigmantas Kryzius - June, 2017:
+ * Appended with Cojure scripting (JSR223) jar.
  */
 //{{{ Imports
 import java.io.BufferedInputStream;
@@ -32,36 +34,76 @@ import org.gjt.sp.jedit.View;
 import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.util.IOUtilities;
 //}}}
-public class ClojurePlugin extends EditPlugin {
-
-	public static final String home = EditPlugin.getPluginHome(
-		ClojurePlugin.class).getPath();
+public class ClojurePlugin extends EditPlugin {         
 
 	public static final String coreProp = "options.clojure.clojure-core-path";
 	public static final String contribProp = "options.clojure.clojure-contrib-path";
+	public static final String scriptingProp = "options.clojure.clojure-jsr223-path";
 
-	public static final String includedCore = MiscUtilities.constructPath(
-		jEdit.getSettingsDirectory(),
-		"jars/"+jEdit.getProperty("options.clojure.clojure-core-jar"));
-
-	public static final String includedContrib = MiscUtilities.constructPath(
-		jEdit.getSettingsDirectory(),
-		"jars/"+jEdit.getProperty("options.clojure.clojure-contrib-jar"));
+	// If ...Prop are set to null initially,
+	// then properties from a previous session cannot be utilized.
+	// If included jars are moved from/to settings/home,
+	// then ...Prop in properties file should be removed before starting jEdit
 	
+	public static final String nameCore = jEdit.getProperty("options.clojure.clojure-core-jar");
+	public static final String nameContrib = jEdit.getProperty("options.clojure.clojure-contrib-jar");
+	public static final String nameScripting = jEdit.getProperty("options.clojure.clojure-jsr223-jar");
+
+	public static final String dirSettings = jEdit.getSettingsDirectory();
+	
+	// 'included...' jars are initially meant in settings
+	public static String includedCore =
+		MiscUtilities.constructPath(dirSettings, "jars/" + nameCore);
+	public static String includedContrib =
+		MiscUtilities.constructPath(dirSettings, "jars/" + nameContrib);
+	public static String includedScripting =
+		MiscUtilities.constructPath(dirSettings, "jars/" + nameScripting);
+
+	// 'included...' jars may be placed in the jEdit install directory, too:
+	public static final String dirHome = jEdit.getJEditHome();
+	
+	public static final String inhomeCore =
+		MiscUtilities.constructPath(dirHome, "jars/" + nameCore);
+	public static final String inhomeContrib =
+		MiscUtilities.constructPath(dirHome, "jars/" + nameContrib);
+	public static final String inhomeScripting =
+		MiscUtilities.constructPath(dirHome, "jars/" + nameScripting);
+
+	private static String findIncluded(String settings, String home) {
+		String included = null;
+		File inSettings = new File(settings);
+		File inHome = new File(home);
+		if (inSettings.exists()) {
+			included = settings;
+		} else if (inHome.exists()) {
+			included = home;
+		}
+		return included;
+	}
+	                            
 	private String installedCore = null;
 	private String installedContrib = null;
+	private String installedScripting = null;
 	
 	public void start() {
-		// TODO: Refactor this
-		// It might be better to let the property be null if the defaults are used
 		
-		// If core/contrib are not defined, set them to defaults
+		// finally, 'included...' jars can be in settings or in home dir:
+		includedCore = findIncluded(includedCore, inhomeCore);
+		includedContrib = findIncluded(includedContrib, inhomeContrib);
+		includedScripting = findIncluded(includedScripting, inhomeScripting);
+		
+		// If core/contrib/scripting properties are not defined, 
+		// they are set to 'included...' jars
 		if (jEdit.getProperty(coreProp) == null) {
 			jEdit.setProperty(coreProp, includedCore);
 		}
 
 		if (jEdit.getProperty(contribProp) == null) {
 			jEdit.setProperty(contribProp, includedContrib);
+		}
+		
+		if (jEdit.getProperty(scriptingProp) == null) {
+			jEdit.setProperty(scriptingProp, includedScripting);
 		}
 
 		installedCore = getClojureCore();
@@ -75,10 +117,15 @@ public class ClojurePlugin extends EditPlugin {
 			jEdit.removePluginJAR(jEdit.getPluginJAR(includedContrib), false);
 			jEdit.addPluginJAR(installedContrib);
 		}
+		
+		installedScripting = getClojureScripting();
+		if (!installedScripting.equals(includedScripting)) {
+			jEdit.removePluginJAR(jEdit.getPluginJAR(includedScripting), false);
+			jEdit.addPluginJAR(installedScripting);
+		}
 
 		setVars();
 		
-
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				if (jEdit.getPlugin("console.ConsolePlugin") != null) {
@@ -99,6 +146,7 @@ public class ClojurePlugin extends EditPlugin {
 			}
 		});
 	}
+	
 	public void stop() {}
 
 	/**
@@ -119,6 +167,16 @@ public class ClojurePlugin extends EditPlugin {
 		jEdit.removePluginJAR(jEdit.getPluginJAR(installedContrib), false);
 		jEdit.addPluginJAR(path);
 		installedContrib = path;
+	}
+	
+	/**
+	 * Set the loaded embeddable clojure scripting (JSR223) jar
+	 */
+	public void setClojureScripting(String path) {
+		jEdit.setProperty(scriptingProp, path);
+		jEdit.removePluginJAR(jEdit.getPluginJAR(installedScripting), false);
+		jEdit.addPluginJAR(path);
+		installedScripting = path;
 	}
 
 	/**
@@ -144,15 +202,24 @@ public class ClojurePlugin extends EditPlugin {
 	public String getClojureContrib() {
 		return jEdit.getProperty(contribProp);
 	}
+	
+	/**
+	 * Returns the location of the clojure scripting (JSR223) jar
+	 */
+	public String getClojureScripting() {
+		return jEdit.getProperty(scriptingProp);
+	}
 
 	/**
-	 * Returns the paths of core and contrib respectively, separated by a path separator
+	 * Returns the paths of core, contrib and scripting, separated by a path separator
 	 * Ideal for setting environment paths and for use in the system shell
 	 */
 	public String getClojure() {
 		String core = getClojureCore();
 		String contrib = getClojureContrib();
-		return core+File.pathSeparator+contrib;
+		String scripting = getClojureScripting();
+		return core + File.pathSeparator + contrib +
+			File.pathSeparator + scripting;
 	}
 
 }

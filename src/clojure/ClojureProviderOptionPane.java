@@ -3,6 +3,8 @@ package clojure;
  * @author Damien Radtke
  * class ClojureProviderOptionPane
  * An option pane that can be used to configure the clojure jars
+ * @author Zigmantas Kryzius - June, 2017:
+ * An option pane appended with buttons to configure Clojure scripting (JSR223).
  */
 //{{{ Imports
 import clojure.ClojurePlugin;
@@ -31,6 +33,9 @@ import org.gjt.sp.jedit.jEdit;
 //}}}
 public class ClojureProviderOptionPane extends AbstractOptionPane {
 	
+	// included: included into the plugin's library
+	// custom: chosen via plugin's option pane
+	
 	private JRadioButton coreIncluded;
 	private JRadioButton coreCustom;
 	private JTextField corePath;
@@ -40,6 +45,11 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 	private JRadioButton contribCustom;
 	private JTextField contribPath;
 	private JButton contribBrowse;
+	
+	private JRadioButton scriptingIncluded;
+	private JRadioButton scriptingCustom;
+	private JTextField scriptingPath;
+	private JButton scriptingBrowse;
 	
 	private ClojurePlugin plugin;
 	
@@ -82,7 +92,7 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 		// Contrib
 		JPanel contribPanel = new JPanel();
 		contribPanel.setLayout(new BoxLayout(contribPanel, BoxLayout.X_AXIS));
-		contribPanel.add(contribIncluded = new JRadioButton("Included (1.1.0)"));
+		contribPanel.add(contribIncluded = new JRadioButton("Included (1.2.0)"));
 		contribPanel.add(contribCustom = new JRadioButton("Choose jar"));
 		ButtonGroup contribGroup = new ButtonGroup();
 		contribGroup.add(contribIncluded);
@@ -104,6 +114,32 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 		contribIncluded.addActionListener(handler);
 		contribCustom.addActionListener(handler);
 		addComponent("Contrib:", contribPanel);
+		
+		// Scripting (JSR223)
+		JPanel scriptingPanel = new JPanel();
+		scriptingPanel.setLayout(new BoxLayout(scriptingPanel, BoxLayout.X_AXIS));
+		scriptingPanel.add(scriptingIncluded = new JRadioButton("Included (1.2)"));
+		scriptingPanel.add(scriptingCustom = new JRadioButton("Choose jar"));
+		ButtonGroup scriptingGroup = new ButtonGroup();
+		scriptingGroup.add(scriptingIncluded);
+		scriptingGroup.add(scriptingCustom);
+		scriptingPanel.add(new JSeparator(JSeparator.VERTICAL));
+		scriptingPanel.add(scriptingPath = new JTextField());
+		scriptingBrowse = new JButton(jEdit.getProperty("vfs.browser.browse.label"));
+		scriptingBrowse.addActionListener(new BrowseHandler(scriptingPath));
+		scriptingPanel.add(scriptingBrowse);
+		String scripting = plugin.getClojureScripting();
+		if (scripting.equals(ClojurePlugin.includedScripting)) {
+			scriptingIncluded.setSelected(true);
+			scriptingPath.setEnabled(false);
+			scriptingBrowse.setEnabled(false);
+		} else {
+			scriptingCustom.setSelected(true);
+			scriptingPath.setText(scripting);
+		}
+		scriptingIncluded.addActionListener(handler);
+		scriptingCustom.addActionListener(handler);
+		addComponent("JSR223:", scriptingPanel);
 	}
 	
 	protected void _save() {
@@ -118,6 +154,12 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 			plugin.setClojureContrib(ClojurePlugin.includedContrib);
 		} else {
 			plugin.setClojureContrib(contribPath.getText());
+		}
+		
+		if (scriptingIncluded.isSelected()) {
+			plugin.setClojureScripting(ClojurePlugin.includedScripting);
+		} else {
+			plugin.setClojureScripting(scriptingPath.getText());
 		}
 
 		plugin.setVars();
@@ -139,6 +181,12 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 			} else if (source == contribCustom) {
 				contribPath.setEnabled(true);
 				contribBrowse.setEnabled(true);
+			} else if (source == scriptingIncluded) {
+				scriptingPath.setEnabled(false);
+				scriptingBrowse.setEnabled(false);
+			} else if (source == scriptingCustom) {
+				scriptingPath.setEnabled(true);
+				scriptingBrowse.setEnabled(true);
 			}
 		}
 
