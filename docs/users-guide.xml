@@ -26,16 +26,14 @@
 			system environment variable CLOJURE to the path of clojure-core and clojure-contrib.
 			So to run a script called 'script.clj', cd to the file's directory (cd $d) and run:
 		</para>
-		<para><programlisting>
-			java -cp "$CLOJURE" clojure.main script.clj
-		</programlisting></para>
+		<para><programlisting>java -cp "$CLOJURE" clojure.main script.clj</programlisting></para>
 		<para>
 			Alternatively, this plugin installs a clojure commando file, so scripts can
 			be run by setting it as the interpreter for clojure files (Plugin Options -> Console
 			-> Compile &amp; Run), and then Plugins -> Console -> Run Current Buffer.
 		</para>
 		<para>
-			With the Clojure SE Shell plugin installed, the Clojure script handler is available
+			With the Clojure-SE (Clojure scripting engine) Shell plugin installed, the Clojure script handler is available
 			so you can write jEdit macros in Clojure and test them in Clojure script engine shell.
 		</para>
 	</chapter>
