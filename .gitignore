@@ -1,0 +1,30 @@
+# === This is a sample of .gitignore file ===
+
+# Ignore jEdit's temp files
+*~
+
+# Ignore jEdit's .marks files
+*.marks
+
+# A trailing "/**" matches everything inside. For example, "abc/**" matches
+# all files inside directory "abc", relative to the location
+# of the .gitignore file, with infinite depth
+
+# [sandbox]/* and [var]/* etc files
+0/**
+00java-test/**
+\[books\]/**
+\[sandbox\]/**
+\[debug\]/**
+\[texts\]/**
+\[var\]/**
+
+# In lib/ there are the files clojure-1.8.0.jar, clojure-contrib-1.2.0.jar,
+# clojure-jsr223-1.2.jar which finally occur in 0bin/
+lib/**
+
+# build/* files
+build/**
+
+# jEdit's autosave files #aaa.bbb#
+*\#
