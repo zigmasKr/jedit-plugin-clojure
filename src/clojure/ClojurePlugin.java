@@ -34,42 +34,37 @@ import org.gjt.sp.jedit.View;
 import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.util.IOUtilities;
 //}}}
-public class ClojurePlugin extends EditPlugin {         
 
-	public static final String coreProp = "options.clojure.clojure-core-path";
-	public static final String contribProp = "options.clojure.clojure-contrib-path";
-	public static final String scriptingProp = "options.clojure.clojure-jsr223-path";
+public class ClojurePlugin extends EditPlugin {
 
-	// If ...Prop are set to null initially,
-	// then properties from a previous session cannot be utilized.
-	// If included jars are moved from/to settings/home,
-	// then ...Prop in properties file should be removed before starting jEdit
-	
+	public static final String propCorePath = "options.clojure.clojure-core-path";
+	public static final String propContribPath = "options.clojure.clojure-contrib-path";
+	public static final String propScriptingPath = "options.clojure.clojure-jsr223-path";
+
 	public static final String nameCore = jEdit.getProperty("options.clojure.clojure-core-jar");
 	public static final String nameContrib = jEdit.getProperty("options.clojure.clojure-contrib-jar");
 	public static final String nameScripting = jEdit.getProperty("options.clojure.clojure-jsr223-jar");
 
 	public static final String dirSettings = jEdit.getSettingsDirectory();
-	
-	// 'included...' jars are initially meant in settings
-	public static String includedCore =
-		MiscUtilities.constructPath(dirSettings, "jars/" + nameCore);
-	public static String includedContrib =
-		MiscUtilities.constructPath(dirSettings, "jars/" + nameContrib);
-	public static String includedScripting =
-		MiscUtilities.constructPath(dirSettings, "jars/" + nameScripting);
-
-	// 'included...' jars may be placed in the jEdit install directory, too:
 	public static final String dirHome = jEdit.getJEditHome();
-	
-	public static final String inhomeCore =
+
+	// 'included...' jars may be placed in the jEdit settings directory:
+	public static final String coreInSettings =
+		MiscUtilities.constructPath(dirSettings, "jars/" + nameCore);
+	public static final String contribInSettings =
+		MiscUtilities.constructPath(dirSettings, "jars/" + nameContrib);
+	public static final String scriptingInSettings =
+		MiscUtilities.constructPath(dirSettings, "jars/" + nameScripting);
+	// OR
+	//'included...' jars may be placed in the jEdit install directory:
+	public static final String coreInHome =
 		MiscUtilities.constructPath(dirHome, "jars/" + nameCore);
-	public static final String inhomeContrib =
+	public static final String contribInHome =
 		MiscUtilities.constructPath(dirHome, "jars/" + nameContrib);
-	public static final String inhomeScripting =
+	public static final String scriptingInHome =
 		MiscUtilities.constructPath(dirHome, "jars/" + nameScripting);
 
-	private static String findIncluded(String settings, String home) {
+	private static String defineIncluded(String settings, String home) {
 		String included = null;
 		File inSettings = new File(settings);
 		File inHome = new File(home);
@@ -80,59 +75,58 @@ public class ClojurePlugin extends EditPlugin {
 		}
 		return included;
 	}
-	                            
-	private String installedCore = null;
-	private String installedContrib = null;
-	private String installedScripting = null;
-	
+
+	private String defineWorking(String propJarPath, String includedJar) {
+		String workingJar;
+		File pathJar;
+		if (!(jEdit.getProperty(propJarPath) == null)) {
+			pathJar = new File(jEdit.getProperty(propJarPath));
+			if (pathJar.exists()) {
+				// jEdit.getProperty(propJarPath) points to working *.jar.
+				workingJar = jEdit.getProperty(propJarPath);
+			} else {
+				// IF path by the property does not exist, ...
+				jEdit.setProperty(propJarPath, includedJar);
+				workingJar = includedJar;
+			}
+		} else {
+			// OR property is null
+			// the property is set to 'included...'
+			jEdit.setProperty(propJarPath, includedJar);
+			workingJar = includedJar;
+		}
+		return workingJar;
+	}
+
+	// declare 'included...' jars:
+	public static String includedCore = null;
+	public static String includedContrib = null;
+	public static String includedScripting = null;
+	// declare 'working...' jars:
+	private String workingCore = null;
+	private String workingContrib = null;
+	private String workingScripting = null;
+
 	public void start() {
-		
-		// finally, 'included...' jars can be in settings or in home dir:
-		includedCore = findIncluded(includedCore, inhomeCore);
-		includedContrib = findIncluded(includedContrib, inhomeContrib);
-		includedScripting = findIncluded(includedScripting, inhomeScripting);
-		
-		// If core/contrib/scripting properties are not defined, 
-		// they are set to 'included...' jars
-		if (jEdit.getProperty(coreProp) == null) {
-			jEdit.setProperty(coreProp, includedCore);
-		}
-
-		if (jEdit.getProperty(contribProp) == null) {
-			jEdit.setProperty(contribProp, includedContrib);
-		}
-		
-		if (jEdit.getProperty(scriptingProp) == null) {
-			jEdit.setProperty(scriptingProp, includedScripting);
-		}
-
-		installedCore = getClojureCore();
-		if (!installedCore.equals(includedCore)) {
-			jEdit.removePluginJAR(jEdit.getPluginJAR(includedCore), false);
-			jEdit.addPluginJAR(installedCore);
-		}
-
-		installedContrib = getClojureContrib();
-		if (!installedContrib.equals(includedContrib)) {
-			jEdit.removePluginJAR(jEdit.getPluginJAR(includedContrib), false);
-			jEdit.addPluginJAR(installedContrib);
-		}
-		
-		installedScripting = getClojureScripting();
-		if (!installedScripting.equals(includedScripting)) {
-			jEdit.removePluginJAR(jEdit.getPluginJAR(includedScripting), false);
-			jEdit.addPluginJAR(installedScripting);
-		}
+	   // define 'included...' jars:
+	   includedCore = defineIncluded(coreInSettings, coreInHome);
+	   includedContrib = defineIncluded(contribInSettings, contribInHome);
+	   includedScripting = defineIncluded(scriptingInSettings, scriptingInHome);
+	   // define 'working...' jars:
+	   workingCore = defineWorking(propCorePath, includedCore);
+	   workingContrib = defineWorking(propContribPath, includedContrib);
+	   workingScripting = defineWorking(propScriptingPath, includedScripting);
 
 		setVars();
-		
+
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				if (jEdit.getPlugin("console.ConsolePlugin") != null) {
 					File clojureCommand = new File(console.ConsolePlugin.getUserCommandDirectory(), "clojure.xml");
 					if (!clojureCommand.exists()) {
 						try {
-							InputStream in = getClass().getResourceAsStream("/commands/clojure.xml");
+							InputStream in = getClass().getResourceAsStream(File.separator + "commands" +
+							   File.separator + "clojure.xml");
 							OutputStream out = new FileOutputStream(clojureCommand);
 							IOUtilities.copyStream(null, in, out, false);
 							IOUtilities.closeQuietly(in);
@@ -146,37 +140,37 @@ public class ClojurePlugin extends EditPlugin {
 			}
 		});
 	}
-	
+
 	public void stop() {}
 
 	/**
-	 * Set the loaded embeddable clojure core jar
+	 * Set the loaded embeddable clojure core jar; method used in ..ProviderOptionPane
 	 */
 	public void setClojureCore(String path) {
-		jEdit.setProperty(coreProp, path);
-		jEdit.removePluginJAR(jEdit.getPluginJAR(installedCore), false);
+		jEdit.setProperty(propCorePath, path);
+		jEdit.removePluginJAR(jEdit.getPluginJAR(workingCore), false);
 		jEdit.addPluginJAR(path);
-		installedCore = path;
+		workingCore = path;
 	}
 
 	/**
-	 * Set the loaded embeddable clojure contrib jar
+	 * Set the loaded embeddable clojure contrib jar; method used in ..ProviderOptionPane
 	 */
 	public void setClojureContrib(String path) {
-		jEdit.setProperty(contribProp, path);
-		jEdit.removePluginJAR(jEdit.getPluginJAR(installedContrib), false);
+		jEdit.setProperty(propContribPath, path);
+		jEdit.removePluginJAR(jEdit.getPluginJAR(workingContrib), false);
 		jEdit.addPluginJAR(path);
-		installedContrib = path;
+		workingContrib = path;
 	}
-	
+
 	/**
-	 * Set the loaded embeddable clojure scripting (JSR223) jar
+	 * Set the loaded embeddable clojure scripting (JSR223) jar; method used in ..ProviderOptionPane
 	 */
 	public void setClojureScripting(String path) {
-		jEdit.setProperty(scriptingProp, path);
-		jEdit.removePluginJAR(jEdit.getPluginJAR(installedScripting), false);
+		jEdit.setProperty(propScriptingPath, path);
+		jEdit.removePluginJAR(jEdit.getPluginJAR(workingScripting), false);
 		jEdit.addPluginJAR(path);
-		installedScripting = path;
+		workingScripting = path;
 	}
 
 	/**
@@ -193,21 +187,21 @@ public class ClojurePlugin extends EditPlugin {
 	 * Returns the location of the clojure core jar
 	 */
 	public String getClojureCore() {
-		return jEdit.getProperty(coreProp);
+		return jEdit.getProperty(propCorePath);
 	}
 
 	/**
 	 * Returns the location of the clojure contrib jar
 	 */
 	public String getClojureContrib() {
-		return jEdit.getProperty(contribProp);
+		return jEdit.getProperty(propContribPath);
 	}
-	
+
 	/**
 	 * Returns the location of the clojure scripting (JSR223) jar
 	 */
 	public String getClojureScripting() {
-		return jEdit.getProperty(scriptingProp);
+		return jEdit.getProperty(propScriptingPath);
 	}
 
 	/**
