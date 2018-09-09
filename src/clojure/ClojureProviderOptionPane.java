@@ -35,10 +35,10 @@ import org.gjt.sp.jedit.browser.VFSFileChooserDialog;
 import org.gjt.sp.jedit.jEdit;
 //}}}
 public class ClojureProviderOptionPane extends AbstractOptionPane {
-	
+
 	// included: included into the plugin's library
 	// custom: chosen via plugin's option pane
-	
+
 	private JRadioButton coreIncluded;
 	private JRadioButton coreCustom;
 	private JTextField corePath;
@@ -48,19 +48,19 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 	private JRadioButton contribCustom;
 	private JTextField contribPath;
 	private JButton contribBrowse;
-	
+
 	private JRadioButton scriptingIncluded;
 	private JRadioButton scriptingCustom;
 	private JTextField scriptingPath;
 	private JButton scriptingBrowse;
-	
+
 	private ClojurePlugin plugin;
-	
+
 	public ClojureProviderOptionPane() {
 		super("clojure-provider");
 		plugin = (ClojurePlugin) jEdit.getPlugin("clojure.ClojurePlugin");
 	}
-	
+
 	protected void _init() {
 		ButtonHandler handler = new ButtonHandler();
 
@@ -81,7 +81,8 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 		corePanel.add(coreBrowse);
 		String core = plugin.getClojureCore();
 		if (core.equals(ClojurePlugin.includedCore)) {
-			coreIncluded.setSelected(true);
+		   coreIncluded.setSelected(true);
+		   corePath.setText("");
 			corePath.setEnabled(false);
 			coreBrowse.setEnabled(false);
 		} else {
@@ -91,7 +92,7 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 		coreIncluded.addActionListener(handler);
 		coreCustom.addActionListener(handler);
 		addComponent("Core:", corePanel);
-		
+
 		// Contrib
 		JPanel contribPanel = new JPanel();
 		contribPanel.setLayout(new BoxLayout(contribPanel, BoxLayout.X_AXIS));
@@ -108,6 +109,7 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 		String contrib = plugin.getClojureContrib();
 		if (contrib.equals(ClojurePlugin.includedContrib)) {
 			contribIncluded.setSelected(true);
+			contribPath.setText("");
 			contribPath.setEnabled(false);
 			contribBrowse.setEnabled(false);
 		} else {
@@ -117,7 +119,7 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 		contribIncluded.addActionListener(handler);
 		contribCustom.addActionListener(handler);
 		addComponent("Contrib:", contribPanel);
-		
+
 		// JSR223 (scripting)
 		String strA = "1.2.0";
 		String strB = "1.2";
@@ -146,6 +148,7 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 		String scripting = plugin.getClojureScripting();
 		if (scripting.equals(ClojurePlugin.includedScripting)) {
 			scriptingIncluded.setSelected(true);
+			scriptingPath.setText("");
 			scriptingPath.setEnabled(false);
 			scriptingBrowse.setEnabled(false);
 		} else {
@@ -156,9 +159,9 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 		scriptingCustom.addActionListener(handler);
 		addComponent("JSR223:", scriptingPanel);
 	}
-	
+
 	protected void _save() {
-		
+
 		if (coreIncluded.isSelected()) {
 			plugin.setClojureCore(ClojurePlugin.includedCore);
 		} else {
@@ -170,7 +173,7 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 		} else {
 			plugin.setClojureContrib(contribPath.getText());
 		}
-		
+
 		if (scriptingIncluded.isSelected()) {
 			plugin.setClojureScripting(ClojurePlugin.includedScripting);
 		} else {
@@ -179,24 +182,27 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 
 		plugin.setVars();
 	}
-	
+
 	class ButtonHandler implements ActionListener {
 
 		public void actionPerformed(ActionEvent e) {
 			Object source = e.getSource();
 			if (source == coreIncluded) {
+			   corePath.setText("");
 				corePath.setEnabled(false);
 				coreBrowse.setEnabled(false);
 			} else if (source == coreCustom) {
 				corePath.setEnabled(true);
 				coreBrowse.setEnabled(true);
 			} else if (source == contribIncluded) {
+			   contribPath.setText("");
 				contribPath.setEnabled(false);
 				contribBrowse.setEnabled(false);
 			} else if (source == contribCustom) {
 				contribPath.setEnabled(true);
 				contribBrowse.setEnabled(true);
 			} else if (source == scriptingIncluded) {
+			   scriptingPath.setText("");
 				scriptingPath.setEnabled(false);
 				scriptingBrowse.setEnabled(false);
 			} else if (source == scriptingCustom) {
@@ -206,7 +212,7 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 		}
 
 	}
-	
+
 	class BrowseHandler implements ActionListener {
 
 		private JTextField txt;
@@ -226,5 +232,5 @@ public class ClojureProviderOptionPane extends AbstractOptionPane {
 		}
 
 	}
-	
+
 }
