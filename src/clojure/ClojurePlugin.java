@@ -96,6 +96,12 @@ public class ClojurePlugin extends EditPlugin {
 			workingJar = includedJar;
 		}
 		return workingJar;
+		/*
+		The idea of 'working jar' path is that if the coresponding property
+		points to an existing jar then it is taken as working;
+		otherwise the included jar is taken as working. In both cases,
+		the property is set to a working jar path.
+		*/
 	}
 
 	// declare 'included...' jars:
@@ -147,10 +153,10 @@ public class ClojurePlugin extends EditPlugin {
 	 * Set the loaded embeddable clojure core jar; method used in ..ProviderOptionPane
 	 */
 	public void setClojureCore(String path) {
-		jEdit.setProperty(propCorePath, path);
-		jEdit.removePluginJAR(jEdit.getPluginJAR(workingCore), false);
-		jEdit.addPluginJAR(path);
-		workingCore = path;
+      jEdit.setProperty(propCorePath, path);
+      jEdit.removePluginJAR(jEdit.getPluginJAR(workingCore), false);
+      jEdit.addPluginJAR(path);
+      workingCore = path;
 	}
 
 	/**
